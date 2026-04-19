@@ -1,0 +1,10 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/roomMode.uss?fileID=7433441132597879392&amp;guid=23e38f1b69d5d2a449460238f3536585&amp;type=3#roomMode"/>
+    <ui:VisualElement name="panel" class="panel" style="flex-grow: 1;">
+        <ui:VisualElement name="menu" class="memu" style="flex-grow: 1; align-self: center; align-items: auto;">
+            <ui:Label text="Room" class="label"/>
+            <ui:Button text="Create" name="CreateButton" class="button buttonSelect"/>
+            <ui:Button text="Join" name="JoinButton" class="button buttonSelect"/>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

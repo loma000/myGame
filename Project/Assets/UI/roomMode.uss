@@ -1,0 +1,88 @@
+:root {
+}
+
+.panel {
+    justify-content: center;
+    align-items: auto;
+    align-content: auto;
+}
+
+.memu {
+    align-items: auto;
+    background-color: rgb(109, 109, 109);
+    width: 234px;
+    justify-content: center;
+    align-self: center;
+    height: auto;
+    min-height: auto;
+    max-height: 304px;
+    align-content: auto;
+}
+
+.button {
+    align-items: auto;
+    align-self: stretch;
+    align-content: auto;
+    justify-content: flex-start;
+    height: auto;
+    background-color: rgb(255, 255, 255);
+}
+
+.label {
+    max-height: none;
+    justify-content: center;
+    align-self: center;
+    align-items: auto;
+    bottom: 20px;
+}
+
+.buttonSelect:hover {
+    background-color: rgb(253, 154, 154);
+    transition-duration: 0.25s;
+    transition-property: scale;
+    transition-timing-function: ease-in-out;
+    scale: 1.2 1.2 1.2;
+}
+
+.InputField {
+    align-content: flex-start;
+    align-self: center;
+}
+
+.LobbyPanel {
+    background-color: rgb(98, 76, 76);
+    scale: 1 1;
+    max-width: 1412px;
+    max-height: 544px;
+    align-self: stretch;
+    align-items: auto;
+    justify-content: flex-start;
+    align-content: auto;
+    width: 1195px;
+}
+
+.panel2 {
+    align-items: stretch;
+    justify-content: space-around;
+}
+
+.PlayerItems {
+    color: rgb(114, 58, 58);
+    background-color: rgb(181, 143, 143);
+    align-self: flex-start;
+    width: 428px;
+    height: 20px;
+    max-height: 117px;
+}
+
+.items {
+    background-color: rgb(63, 63, 63);
+    width: 575px;
+    height: auto;
+    max-height: 95px;
+    top: 20px;
+    left: 17px;
+    align-content: auto;
+    align-self: auto;
+    justify-content: center;
+}

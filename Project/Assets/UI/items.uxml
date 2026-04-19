@@ -1,0 +1,7 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/roomMode.uss?fileID=7433441132597879392&amp;guid=23e38f1b69d5d2a449460238f3536585&amp;type=3#roomMode"/>
+    <ui:VisualElement name="PlayerItems" class="items" style="flex-grow: 1;">
+        <ui:Label text="name" name="name" data-source="" data-source-path="" binding-path="name" style="height: 42px; width: 254px; font-size: 24px; align-self: stretch;"/>
+        <ui:Label text="id" name="id" data-source="" data-source-path=" " binding-path="id" style="font-size: 22px; height: 43px;"/>
+    </ui:VisualElement>
+</ui:UXML>

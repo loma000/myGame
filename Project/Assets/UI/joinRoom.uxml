@@ -1,0 +1,9 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/roomMode.uss?fileID=7433441132597879392&amp;guid=23e38f1b69d5d2a449460238f3536585&amp;type=3#roomMode"/>
+    <ui:VisualElement name="panel" class="panel" style="flex-grow: 1;">
+        <ui:VisualElement name="menu" class="memu" style="flex-grow: 1; align-self: center; align-items: auto;">
+            <ui:TextField label="" placeholder-text="ID" hide-placeholder-on-focus="false" name="RoomId" enabled="true" class="InputField" style="width: 170px;"/>
+            <ui:Button text="Join&#10;" name="Join" class="button buttonSelect"/>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

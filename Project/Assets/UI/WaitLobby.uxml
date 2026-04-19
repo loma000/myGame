@@ -1,0 +1,10 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/roomMode.uss?fileID=7433441132597879392&amp;guid=23e38f1b69d5d2a449460238f3536585&amp;type=3#roomMode"/>
+    <ui:VisualElement name="panel" class="panel2" style="flex-grow: 1;">
+        <ui:VisualElement name="lobbyPanel" class="LobbyPanel" style="flex-grow: 1; max-width: none; width: 584px; align-self: center; justify-content: flex-start; align-items: auto;">
+            <ui:Label text="Players" name="Players" style="font-size: 33px; align-self: flex-start; justify-content: flex-start;"/>
+            <ui:Label text="RoomId" name="RoomId" style="height: 60px; width: 151px; font-size: 39px; align-self: flex-end; translate: 0 -74px;"/>
+            <ui:ListView data-source="project://database/Assets/Script/TestListView.asset?fileID=11400000&amp;guid=ac88488bcfe7d9f4bad031e5ae49ecdb&amp;type=2#TestListView" data-source-path="players" item-template="project://database/Assets/UI/items.uxml?fileID=9197481963319205126&amp;guid=ed6682a6ede939643b5d92f2102a0a9a&amp;type=3#items" binding-source-selection-mode="Manual" name="ListView" style="align-self: flex-start; height: 560px; width: 582px;"/>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
