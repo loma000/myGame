@@ -9,7 +9,7 @@ public class GridTool : MonoBehaviour
     {
         float x = hexSize * 3f / 2f * col;
         // col คู่ → ต่ำกว่า, col คี่ → สูงกว่า
-        float z = hexSize * Mathf.Sqrt(3f) * (row - (col % 2) * 0.5f);
+        float z = hexSize * Mathf.Sqrt(3f) * (row + (col % 2) * 0.5f);
         return new Vector3(x, 0, z);
     }
 

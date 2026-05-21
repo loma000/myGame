@@ -10,18 +10,23 @@ public class PlayerListUI : MonoBehaviour
     private ListView listView;
     private Label roomId;
     private List<PlayerData> players;
+    private StompClient stompClient;
+    private Button StartButton;
 
     void Awake()
     {
+        stompClient = StompClient.Instance;
         players = PlayerManager.Instance.players;
-    }
 
-    void Start()
-    {
         var root = GetComponent<UIDocument>().rootVisualElement;
 
         listView = root.Q<ListView>();
         roomId = root.Q<Label>("RoomId");
+        StartButton = root.Q<Button>("Start");
+    }
+
+    void Start()
+    {
         listView.itemsSource = players;
 
         listView.makeItem = () =>
@@ -44,16 +49,23 @@ public class PlayerListUI : MonoBehaviour
     {
         RoomManager.OnRoomIdChanged += updateUI;
         PlayerManager.OnPLayerChange += OnReceivePlayerList;
+        StartButton.text = PlayerManager.Instance.player.isHost ? "Start" : "wating for host...";
+        StartButton.SetEnabled(
+            players.Count >= RoomManager.Instance.maxPlayers && PlayerManager.Instance.player.isHost
+        );
+        StartButton.clicked += OnSendStartGame;
     }
 
     void OnDisable()
     {
         RoomManager.OnRoomIdChanged -= updateUI;
         PlayerManager.OnPLayerChange -= OnReceivePlayerList;
+        StartButton.clicked -= OnSendStartGame;
     }
 
     void updateUI(string id)
     {
+        Debug.Log(id);
         roomId.text = id;
     }
 
@@ -63,5 +75,15 @@ public class PlayerListUI : MonoBehaviour
 
         listView.itemsSource = players;
         listView.Rebuild();
+        Debug.Log("isHost: " + PlayerManager.Instance.player.isHost);
+        StartButton.text = PlayerManager.Instance.player.isHost ? "Start" : "wating for host...";
+        StartButton.SetEnabled(
+            players.Count >= RoomManager.Instance.maxPlayers && PlayerManager.Instance.player.isHost
+        );
+    }
+
+    void OnSendStartGame()
+    {
+        stompClient.Send("/app/game/startspawn/" + RoomManager.Instance.roomId, "");
     }
 }

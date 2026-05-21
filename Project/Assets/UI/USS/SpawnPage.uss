@@ -1,0 +1,55 @@
+:root {
+}
+
+.bg {
+    color: rgb(159, 56, 56);
+    background-color: rgb(144, 78, 78);
+}
+
+.characterCard {
+    width: 128px;
+    height: 188px;
+    flex-shrink: 0;
+    flex-grow: 0;
+    background-color: rgb(181, 181, 181);
+    border-radius: 8px;
+    max-width: 181px;
+    margin-right: 23px;
+}
+
+.dragables {
+}
+
+.Hex {
+    color: rgb(109, 53, 53);
+    background-color: rgb(210, 187, 187);
+    position: relative;
+}
+
+.Characterlist {
+    background-color: rgb(210, 210, 210);
+}
+
+.row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 16px;
+    padding: 10px;
+}
+
+.card {
+    background-color: rgb(189, 189, 189);
+    width: auto;
+    height: auto;
+    max-width: 118px;
+    max-height: 139px;
+    min-height: 139px;
+    margin-right: 0;
+    margin-bottom: 20px;
+    min-width: 118px;
+}
+
+.my-list {
+    margin-bottom: 21px;
+}

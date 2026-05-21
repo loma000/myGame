@@ -105,7 +105,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GridObj
   NormalGrid: {fileID: 2800000, guid: f36bc4ef3329f3e4ba21c0f07839e337, type: 3}
-  SelectGrid: {fileID: 2800000, guid: c7f64fddfe1265544b7cd8c2719c98e5, type: 3}
+  AttackGrid: {fileID: 2800000, guid: 6404c79eedf21624c921ee47a084c75a, type: 3}
+  MoveGrid: {fileID: 2800000, guid: c7f64fddfe1265544b7cd8c2719c98e5, type: 3}
   row: 0
   col: 0
 --- !u!65 &-4578583055989584814

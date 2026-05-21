@@ -1,13 +1,14 @@
 using System;
 using UnityEngine;
 
-public class UIManager : MonoBehaviour
+public class LobbyUIManager : MonoBehaviour
 {
-    public static UIManager Instance;
+    public static LobbyUIManager Instance;
     public GameObject RoomModeUI;
     public GameObject CreateRoomUI;
     public GameObject JoinRoomUI;
     public GameObject waitingLobby;
+    public GameObject SpawnSelectorUI;
     private string testId;
 
     public StompClient stompClient = StompClient.Instance;
@@ -52,9 +53,11 @@ public class UIManager : MonoBehaviour
         JoinRoomUI.SetActive(false);
     }
 
-    public void CloseLobby()
+
+    public void SpawnPhase()
     {
         waitingLobby.SetActive(false);
+        SpawnSelectorUI.SetActive(true);
     }
 
     // Update is called once per frame

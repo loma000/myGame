@@ -4,28 +4,34 @@ using UnityEngine;
 
 public class GridManager : MonoBehaviour
 {
+    public static GridManager Instance;
     public GameObject GridPrefab;
     int ColSize = 8;
     int RowSize = 8;
     public List<GridObj> grids;
-    public List<GridData> moveableGrid;
+    public List<GridData> MoveableGrid;
     public List<GridData> AttackableGrid;
     private StompClient stompClient;
-    private bool isShowing = false;
+    public bool isShowing = false;
+    private GameManager gameManager;
+
     private string getCharGridId;
 
     void Awake()
     {
+        Instance = this;
         stompClient = StompClient.Instance;
         grids = new List<GridObj>();
+        gameManager = GameManager.Instance;
+        GameManager.OnGameStart += GridGenerator;
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        GridGenerator();
         GameManager.OnGameStart += OnConnect;
-        GameManager.OnMoving += moving;
+        GameManager.OnMoving += Resetting;
+        GameManager.OnAttacking += Resetting;
     }
 
     void OnConnect()
@@ -48,39 +54,67 @@ public class GridManager : MonoBehaviour
     void getCharacterGrid(string body)
     {
         var data = JsonConvert.DeserializeObject<CharacterGridData>(body);
-        moveableGrid = data.moveAbleGrid;
-        foreach (var g in moveableGrid)
+        MoveableGrid = data.moveAbleGrid;
+        AttackableGrid = data.attackAbleGrid;
+        foreach (var g in MoveableGrid)
             Debug.Log($"col: {g.col}, row: {g.row}");
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.A) && CharacterSelector.Instance.selectCharacter != null)
+        if (
+            (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.S))
+            && CharacterSelector.Instance.selectCharacter != null
+        )
         {
             if (!isShowing)
             {
-                ShowGrid();
+                if (Input.GetKeyDown(KeyCode.A))
+                {
+                    gameManager.actionMode = ActionMode.Move;
+                    ShowMoveAbleGrid();
+                }
+                else if (Input.GetKeyDown(KeyCode.S))
+                {
+                    gameManager.actionMode = ActionMode.Attack;
+                    ShowAttackAbleGrid();
+                }
             }
             else
             {
                 ResetGrid();
+                gameManager.actionMode = ActionMode.Normal;
             }
             isShowing = !isShowing;
         }
     }
 
-    void moving()
+    void Resetting()
     {
         isShowing = false;
+        gameManager.actionMode = ActionMode.Normal;
         ResetGrid();
     }
 
-    void ShowGrid()
+    void ShowAttackAbleGrid()
     {
         ResetGrid();
 
-        foreach (GridData data in moveableGrid)
+        foreach (GridData data in AttackableGrid)
+        {
+            GridObj match = grids.Find(g => g.col == data.col && g.row == data.row);
+
+            if (match != null)
+                match.SetGridTex("ShowAttack");
+        }
+    }
+
+    void ShowMoveAbleGrid()
+    {
+        ResetGrid();
+
+        foreach (GridData data in MoveableGrid)
         {
             GridObj match = grids.Find(g => g.col == data.col && g.row == data.row);
 
@@ -112,10 +146,35 @@ public class GridManager : MonoBehaviour
             }
         }
     }
+
+    public static Grid getGrid(Camera cam)
+    {
+        Ray ray = cam.ScreenPointToRay(Input.mousePosition);
+        RaycastHit hit;
+        if (Physics.Raycast(ray, out hit, Mathf.Infinity))
+        {
+            Debug.Log("a");
+            if (hit.collider.CompareTag("Tile"))
+            {
+                var tile = hit.collider.gameObject.GetComponent<Grid>();
+                Debug.Log(tile.row + "," + tile.col);
+                return tile;
+            }
+        }
+        return null;
+    }
 }
 
 [System.Serializable]
 public class CharacterGridData
 {
     public List<GridData> moveAbleGrid;
+    public List<GridData> attackAbleGrid;
+}
+
+public enum ActionMode
+{
+    Normal,
+    Attack,
+    Move,
 }

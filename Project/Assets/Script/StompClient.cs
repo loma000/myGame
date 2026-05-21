@@ -9,6 +9,10 @@ public class StompClient : MonoBehaviour
     public static StompClient Instance;
     private WebSocket _ws;
 
+    // เก็บทุก subscription ไม่หายตอน disconnect
+    private Dictionary<string, (string destination, Action<string> callback)> _registered = new();
+
+    // active subscription ที่ส่ง SUBSCRIBE frame แล้ว
     private Dictionary<string, (string destination, Action<string> callback)> _subscriptions =
         new();
     private int _subscriptionCounter = 0;
@@ -19,6 +23,9 @@ public class StompClient : MonoBehaviour
     public string passcode = "";
     public string virtualHost = "/";
 
+    private int _reconnectAttempts = 0;
+    private const int MaxReconnectAttempts = 5;
+
     public bool IsConnected { get; private set; } = false;
 
     public event Action OnConnected;
@@ -26,9 +33,16 @@ public class StompClient : MonoBehaviour
     public event Action OnDisconnected;
 
     // ─── Lifecycle ─────────────────────────────────────────────
+
     private void Awake()
     {
+        if (Instance != null)
+        {
+            Destroy(gameObject);
+            return;
+        }
         Instance = this;
+        DontDestroyOnLoad(gameObject);
     }
 
     async void Start()
@@ -72,11 +86,27 @@ public class StompClient : MonoBehaviour
             OnError?.Invoke(e);
         };
 
-        _ws.OnClose += (code) =>
+        _ws.OnClose += async (code) =>
         {
             Debug.Log("[STOMP] WebSocket closed: " + code);
             IsConnected = false;
             OnDisconnected?.Invoke();
+
+            // Auto reconnect
+            if (_reconnectAttempts < MaxReconnectAttempts)
+            {
+                _reconnectAttempts++;
+                int delay = (int)(Mathf.Pow(2, _reconnectAttempts) * 1000); // 2, 4, 8, 16, 32 วินาที
+                Debug.Log(
+                    $"[STOMP] Reconnecting in {delay / 1000}s... (attempt {_reconnectAttempts}/{MaxReconnectAttempts})"
+                );
+                await System.Threading.Tasks.Task.Delay(delay);
+                await Connect();
+            }
+            else
+            {
+                Debug.LogError("[STOMP] Max reconnect attempts reached.");
+            }
         };
 
         await _ws.Connect();
@@ -84,6 +114,7 @@ public class StompClient : MonoBehaviour
 
     public async System.Threading.Tasks.Task Disconnect()
     {
+        _reconnectAttempts = MaxReconnectAttempts; // ปิด auto reconnect
         IsConnected = false;
         if (_ws != null && _ws.State == WebSocketState.Open)
         {
@@ -94,27 +125,20 @@ public class StompClient : MonoBehaviour
 
     // ─── Public API ────────────────────────────────────────────
 
-    /// <summary>
-    /// Subscribe to a destination.
-    /// ถ้า STOMP connect แล้ว → subscribe ทันที
-    /// ถ้ายังไม่ connect → รอ OnConnected แล้วค่อย subscribe
-    /// Returns subscription id.
-    /// </summary>
     public string Subscribe(string destination, Action<string> callback)
     {
         string id = "sub-" + _subscriptionCounter++;
-        _subscriptions[id] = (destination, callback);
+        _registered[id] = (destination, callback); // เก็บไว้เสมอ
 
         if (IsConnected)
         {
+            _subscriptions[id] = (destination, callback);
             SendFrame(BuildSubscribe(destination, id));
             Debug.Log($"[STOMP] Subscribed → {destination} ({id})");
         }
         else
         {
-            Debug.Log(
-                $"[STOMP] Queued subscription → {destination} ({id}), waiting for connect..."
-            );
+            Debug.Log($"[STOMP] Queued → {destination} ({id})");
         }
 
         return id;
@@ -122,13 +146,13 @@ public class StompClient : MonoBehaviour
 
     public void Unsubscribe(string subscriptionId)
     {
+        _registered.Remove(subscriptionId); // เอาออกจากทั้งคู่
+
         if (_subscriptions.ContainsKey(subscriptionId))
         {
             _subscriptions.Remove(subscriptionId);
             if (IsConnected)
-            {
                 SendFrame($"UNSUBSCRIBE\nid:{subscriptionId}\n\n\0");
-            }
             Debug.Log($"[STOMP] Unsubscribed {subscriptionId}");
         }
     }
@@ -239,12 +263,15 @@ public class StompClient : MonoBehaviour
         string version = headers.TryGetValue("version", out var v) ? v : "unknown";
         Debug.Log($"[STOMP] Connected! STOMP version: {version}");
         IsConnected = true;
+        _reconnectAttempts = 0; // reset counter
 
-        // ✅ ส่ง SUBSCRIBE frame ให้ทุก subscription ที่ queue ไว้ก่อนหน้า
-        foreach (var kvp in _subscriptions)
+        // Re-subscribe ทุกตัวจาก _registered
+        _subscriptions.Clear();
+        foreach (var kvp in _registered)
         {
+            _subscriptions[kvp.Key] = kvp.Value;
             SendFrame(BuildSubscribe(kvp.Value.destination, kvp.Key));
-            Debug.Log($"[STOMP] Subscribed (queued) → {kvp.Value.destination} ({kvp.Key})");
+            Debug.Log($"[STOMP] Re-subscribed → {kvp.Value.destination} ({kvp.Key})");
         }
 
         OnConnected?.Invoke();
@@ -300,5 +327,12 @@ public class StompClient : MonoBehaviour
         {
             Debug.LogWarning("[STOMP] Cannot send — WebSocket not open");
         }
+    }
+
+    // ใน StompClient เพิ่ม method debug
+    public void PrintRegistered()
+    {
+        foreach (var kvp in _registered)
+            Debug.Log($"registered: {kvp.Value.destination}");
     }
 }

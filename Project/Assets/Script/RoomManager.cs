@@ -22,7 +22,11 @@ public class RoomManager : MonoBehaviour
     }
 
     public void joinRoom(string roomId)
-    {
+    { 
+        if (roomId.Equals(""))
+        {
+            return;
+        }
         StartCoroutine(JoinRoomRequest(roomId));
     }
 
@@ -36,7 +40,7 @@ public class RoomManager : MonoBehaviour
         );
         yield return req.SendWebRequest();
         var data = JsonUtility.FromJson<RoomData>(req.downloadHandler.text);
-
+        PlayerManager.Instance.player.isHost = true;
         Connect(data);
     }
 
@@ -52,15 +56,21 @@ public class RoomManager : MonoBehaviour
             Debug.Log("room not found");
         }
         else
+        {
+            LobbyUIManager.Instance.CloseUIandOpenLobby();
             Connect(data);
+        }
     }
 
     void Connect(RoomData res)
     {
         roomId = res.Id;
         Debug.Log(roomId);
+        Debug.Log("OnRoomIdChanged null: " + (OnRoomIdChanged == null));
+        Debug.Log("invoking: " + OnRoomIdChanged?.GetInvocationList().Length + " subscribers");
         PlayerManager.Instance.players = res.players;
         OnRoomIdChanged?.Invoke(roomId);
+        GameManager.OnWaitingPlayer?.Invoke();
     }
 }
 
@@ -78,4 +88,5 @@ public class PlayerData
 {
     public string name;
     public string id;
+    public bool isHost;
 }

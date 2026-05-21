@@ -30,10 +30,24 @@ public class SpawnManager : MonoBehaviour
             fetchCharacter = null;
         }
         stompClient.Subscribe(
-            "/topic/fetchCharacter/" + RoomManager.Instance.roomId,
+            "/topic/fetchCharacter/"
+                + RoomManager.Instance.roomId
+                + "/"
+                + PlayerManager.Instance.player.id,
             onFetchMinion
         );
-        stompClient.Send("/app/game/getCharacter/fetch/" + RoomManager.Instance.roomId, "");
+        stompClient.Send(
+            "/app/game/getCharacter/fetch/"
+                + RoomManager.Instance.roomId
+                + "/"
+                + PlayerManager.Instance.player.id,
+            ""
+        );
+    }
+
+    public Character GetCharacter(string Id)
+    {
+        return spawnedCharacters.Find((c) => c.Id.Equals(Id));
     }
 
     void onFetchMinion(string body)
@@ -55,11 +69,24 @@ public class SpawnManager : MonoBehaviour
 
         foreach (var c in characters)
         {
-            Character character = Instantiate(playerObj).GetComponent<Character>();
-            character.isLocal = c.OwnerId.Equals(PlayerManager.Instance.player.id);
-            character.Data = c;
+            GameObject character = Instantiate(playerObj);
 
-            spawnedCharacters.Add(character);
+            var characterVisual = character.GetComponent<CharacterVisual>();
+            characterVisual.SetModel(c.name);
+            Character characterData = character.GetComponent<Character>();
+            characterData.InstanceCharacter(
+                c.OwnerId.Equals(PlayerManager.Instance.player.id),
+                c.name,
+                c.Id,
+                c.OwnerId,
+                c.row,
+                c.col,
+                c.Atk,
+                c.maxHp,
+                c.Hp
+            );
+
+            spawnedCharacters.Add(characterData);
         }
     }
 }

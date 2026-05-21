@@ -1,15 +1,17 @@
 using System;
 using UnityEngine;
 
-public class GridObj : MonoBehaviour
+public class GridObj : Grid
 {
     [SerializeField]
     Texture2D NormalGrid;
 
     [SerializeField]
-    Texture2D SelectGrid;
-    public int row;
-    public int col;
+    Texture2D AttackGrid;
+
+    [SerializeField]
+    Texture2D MoveGrid;
+  
     private Renderer render;
     private MaterialPropertyBlock block;
 
@@ -25,9 +27,13 @@ public class GridObj : MonoBehaviour
     public void SetGridTex(string action)
     {
         render.GetPropertyBlock(block);
-        if (action.Equals("ShowMove"))
+        if (action.Equals("ShowAttack"))
         {
-            block.SetTexture("_BaseMap", SelectGrid);
+            block.SetTexture("_BaseMap", AttackGrid);
+        }
+        else if (action.Equals("ShowMove"))
+        {
+            block.SetTexture("_BaseMap", MoveGrid);
         }
         else
         {

@@ -1,4 +1,3 @@
-using Unity.Multiplayer.Center.Common;
 using UnityEngine;
 
 public class CharacterSelector : MonoBehaviour
@@ -17,35 +16,51 @@ public class CharacterSelector : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        GameManager.OnMoving += (() => selectCharacter = null);
+        GameManager.OnAttacking += (() => selectCharacter = null);
         cam = Camera.main;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetMouseButtonDown(0))
-        {
-            selector();
-        }
-
+        setGridShowingData();
         if (Input.GetKeyDown(KeyCode.A) && selectCharacter != null) { }
     }
 
-    void selector()
+    public Character selector()
     {
         Ray ray = cam.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
-
-        if (Physics.Raycast(ray, out hit))
+        int layerMask = LayerMask.GetMask("CharacterSelect");
+        if (
+            Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask)
+            && hit.collider.CompareTag("Character")
+        )
         {
-            if (hit.collider.CompareTag("Character"))
+            return hit.collider.GetComponent<Character>();
+        }
+        else
+            return null;
+    }
+
+    void setGridShowingData()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            if (!GridManager.Instance.isShowing)
             {
-                selectCharacter = hit.collider.GetComponent<Character>();
+                var currentSelect = selector();
+                if (currentSelect == null)
+                    return;
+                if (selectCharacter == currentSelect)
+                    return;
+                selectCharacter = currentSelect;
 
                 if (selectCharacter.isLocal)
                 {
-                    Debug.Log(selectCharacter.Data.name);
-                    var data = new GetCharacterGridDto { character = selectCharacter.Data };
+                    Debug.Log(selectCharacter.Name);
+                    var data = new GetCharacterGridDto { characterId = selectCharacter.Id };
 
                     stompClient.Send(
                         "/app/game/getCharacter/Grid/"
@@ -56,10 +71,6 @@ public class CharacterSelector : MonoBehaviour
                     );
                 }
             }
-            else
-            {
-                selectCharacter = null;
-            }
         }
     }
 }
@@ -67,5 +78,5 @@ public class CharacterSelector : MonoBehaviour
 [System.Serializable]
 class GetCharacterGridDto
 {
-    public CharacterData character;
+    public string characterId;
 }

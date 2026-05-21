@@ -1,9 +1,25 @@
+using System.Collections;
+using System.Collections.Generic;
+using Newtonsoft.Json;
+using Unity.Mathematics;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Character : MonoBehaviour
 {
-    public CharacterData Data;
+    public string Name;
+    public string Id;
+    public string OwnerId;
+    public int row;
 
+    public int col;
+
+    public float Hp;
+    public float maxHp;
+    public float Atk;
+
+    [SerializeField]
+    private HealthBar healthBar;
     public Vector3 position;
     private Vector3 lastPos;
     string moveId;
@@ -12,12 +28,40 @@ public class Character : MonoBehaviour
     float interval = 0;
     StompClient stompClient;
 
+    public CharacterVisual _characterVisual;
+
+    public void InstanceCharacter(
+        bool isLocal,
+        string name,
+        string id,
+        string OwnerId,
+        int row,
+        int col,
+        float Atk,
+        float maxHp,
+        float Hp
+    )
+    {
+        this.isLocal = isLocal;
+        this.Name = name;
+        this.Id = id;
+        this.OwnerId = OwnerId;
+        this.row = row;
+        this.col = col;
+        this.Atk = Atk;
+        this.maxHp = maxHp;
+        this.Hp = Hp;
+        healthBar.UpdateHealthBar(maxHp, Hp);
+    }
+
     void OnEnable()
     {
         stompClient.OnConnected += OnConnect;
         stompClient.OnDisconnected += OnDisconnect;
         if (stompClient.IsConnected)
             OnConnect();
+
+        _characterVisual = GetComponent<CharacterVisual>();
     }
 
     void OnDestroy()
@@ -36,14 +80,40 @@ public class Character : MonoBehaviour
 
     void OnSetPos(string body)
     {
-        var move = JsonUtility.FromJson<MovementData>(body);
-        if (move.type.Equals("move") && move.Id.Equals(Data.Id))
+        var move = JsonConvert.DeserializeObject<MovementData>(body);
+        if (move.type.Equals("move") && move.Id.Equals(Id))
         {
-            Data.col = move.endCol;
-            Data.row = move.endRow;
+            col = move.endCol;
+            row = move.endRow;
+            if (isLocal)
+            {
+                GameManager.OnMoving?.Invoke();
+            }
 
-            position = GridTool.HexToWorld(move.endCol, move.endRow);
+            StartCoroutine(MoveAlongPath(move.path, row, col));
         }
+    }
+
+    IEnumerator MoveAlongPath(List<GridData> path, int endRow, int endCol, float speed = 2f)
+    {
+        _characterVisual.SetWalking(true);
+        foreach (var step in path)
+        {
+            Vector3 target = GridTool.HexToWorld(step.col, step.row);
+            transform.LookAt(new Vector3(target.x, transform.position.y, target.z));
+            while (Vector3.Distance(transform.position, target) >= 0.1f)
+            {
+                transform.position = Vector3.MoveTowards(
+                    transform.position,
+                    target,
+                    speed * Time.deltaTime
+                );
+                yield return null;
+            }
+            transform.position = target;
+        }
+        transform.position = GridTool.HexToWorld(endCol, endRow);
+        _characterVisual.SetWalking(false);
     }
 
     void OnDisconnect()
@@ -62,57 +132,28 @@ public class Character : MonoBehaviour
 
     void Start()
     {
-        position = GridTool.HexToWorld(Data.col, Data.row);
+        position = GridTool.HexToWorld(col, row);
+        transform.position = position;
     }
 
-    // Update is called once per frame
-    void Update()
+    public void TakeDamage(float newHp)
     {
-        if (Input.GetMouseButton(0) && isLocal && Time.time - interval >= 0.1f)
+        Hp = newHp;
+        healthBar.UpdateHealthBar(maxHp, Hp);
+        deadCheck();
+    }
+
+    void deadCheck()
+    {
+        if (Hp <= 0)
         {
-            Ray ray = cam.ScreenPointToRay(Input.mousePosition);
-            RaycastHit hit;
-            if (Physics.Raycast(ray, out hit))
-            {
-                if (hit.collider.CompareTag("Tile"))
-                {
-                    var tile = hit.collider.gameObject.GetComponent<GridObj>();
-                    Debug.Log(tile.row + "," + tile.col);
-
-                    var newPosition = GridTool.HexToWorld(tile.col, tile.row);
-
-                    //  Debug.Log("position: " + position);
-
-                    if (!newPosition.Equals(lastPos))
-                    {
-                        GameManager.OnMoving?.Invoke();
-                        Debug.Log(Vector3.Distance(position, lastPos));
-                        lastPos = newPosition;
-                        var movement = new MovementData
-                        {
-                            type = "move",
-                            Id = Data.Id,
-                            startRow = Data.row,
-                            startCol = Data.col,
-                            endRow = tile.row,
-                            endCol = tile.col,
-                        };
-                        stompClient.Send(
-                            "/app/update/movement/" + RoomManager.Instance.roomId,
-                            JsonUtility.ToJson(movement)
-                        );
-                    }
-                }
-                interval = Time.time;
-            }
+            Destroy(gameObject);
         }
-
-        transform.position = Vector3.Lerp(transform.position, position, Time.deltaTime * 10f);
     }
 }
 
 [System.Serializable]
-public class MovementData
+public class MovementDto
 {
     public string type;
     public string Id;
@@ -120,6 +161,17 @@ public class MovementData
     public int startCol;
     public int endRow;
     public int endCol;
+}
+
+[System.Serializable]
+public class MovementData
+{
+    public string type;
+    public string Id;
+
+    public int endRow;
+    public int endCol;
+    public List<GridData> path;
 }
 
 [System.Serializable]
@@ -141,4 +193,9 @@ public class CharacterData
 
     public int col;
     public int moveRadius;
+
+    public int attackRadius;
+    public float Hp;
+    public float maxHp;
+    public float Atk;
 }

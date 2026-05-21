@@ -7,11 +7,12 @@ TagManager:
   - StompClient
   - Tile
   - Character
+  - CharacterModel
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - CharacterSelect
   - Water
   - UI
   - 

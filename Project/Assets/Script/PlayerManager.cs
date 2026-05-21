@@ -41,14 +41,8 @@ public class PlayerManager : MonoBehaviour
         Debug.Log(body);
         players = JsonConvert.DeserializeObject<List<PlayerData>>(body);
         OnPLayerChange?.Invoke(players);
-        UIManager.Instance.CloseUIandOpenLobby();
+
         Debug.Log(players.Count);
-        if (players.Count >= RoomManager.Instance.maxPlayers)
-        {
-            GameManager.OnGameStart?.Invoke();
-            UIManager.Instance.CloseLobby();
-           
-        }
     }
 
     public void CreatePlayer()
